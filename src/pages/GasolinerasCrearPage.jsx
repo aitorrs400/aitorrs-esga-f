@@ -1,62 +1,27 @@
-import { useEffect, useRef, useState } from "react";
-import { Alert, Box, Button, Grid, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Paper, Slide, Snackbar, TextField, Typography } from "@mui/material";
+import { useState } from "react";
+import { Alert, Box, Button, Grid, Paper, Slide, Snackbar, TextField, Typography } from "@mui/material";
 
-import SearchIcon from '@mui/icons-material/Search';
-import PlaceIcon from '@mui/icons-material/Place';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../helpers/axios";
 import { mensajesBack } from "../helpers/mensajesBack";
 
-// Librerías de Google Maps API
-const { Map } = await google.maps.importLibrary("maps");
-const { Marker } = await google.maps.importLibrary("marker");
 
 export const GasolinerasCrearPage = () => {
 
     // Inicializamos variables
     const navigate = useNavigate();
-    const geocoder = new google.maps.Geocoder();
-    let mapRef = useRef(null);
 
-    const [map, setMap] = useState();
-    const [marker, setMarker] = useState();
-    const [geoLocation, setGeolocation] = useState({ ko: false, status: '' });
-    const [address, setAddress] = useState('');
-    const [addressList, setAddressList] = useState([]);
-    const [formErrors, setFormErrors] = useState({ nombre: false, direccion: false, numero: false, localidad: false, cp: false, provincia: false, pais: false, coordenadas: false });
-    const [dirGasolinera, setDirGasolinera] = useState({ nombre: '', direccion: '', numero: '', localidad: '', cp: '', provincia: '', pais: '', coordenadas: '' });
+    const [formErrors, setFormErrors] = useState({ nombre: false, direccion: false, numero: false, localidad: false, cp: false, provincia: false, pais: false });
+    const [dirGasolinera, setDirGasolinera] = useState({ nombre: '', direccion: '', numero: '', localidad: '', cp: '', provincia: '', pais: '' });
     const [snackState, setSnackState] = useState({ open: false, Transition: Slide, text: 'Snackbar sin asignar', severity: 'info' });
 
-    // Efectos
-    useEffect(() => {
-        if( mapRef.current !== null ) {
-
-            // Creamos el mapa
-            setMap(new Map(document.getElementById("map"), {
-                zoom: 0,
-                center: { lat: 0.0, lng: 0.0 },
-                mapId: "DEMO_MAP_ID",
-            }));
-
-            // Creamos el marcador
-            setMarker(new Marker({ position: { lat: 0.0, lng: 0.0 }, title: dirGasolinera.nombre }));
-
-        }
-    },[mapRef]);
-  
     // Funciones
-    const handleIntro = (e) => {
-        if (e.keyCode === 13) {
-            codeAddress();
-        }
-    }
-
     const handleCrear = async (e) => {
 
         let errors = false;
-        let errorsForm = { direccion: false, numero: false, localidad: false, cp: false, provincia: false, pais: false, nombre: false, coordenadas: false };
+        let errorsForm = { direccion: false, numero: false, localidad: false, cp: false, provincia: false, pais: false, nombre: false };
 
         // Validamos todos los campos primero
         if( dirGasolinera.direccion === '' ) {
@@ -91,11 +56,6 @@ export const GasolinerasCrearPage = () => {
 
         if( dirGasolinera.nombre === '' ) {
             errorsForm.nombre = true;
-            errors = true;
-        }
-
-        if( dirGasolinera.coordenadas === '' ) {
-            errorsForm.coordenadas = true;
             errors = true;
         }
 
@@ -155,112 +115,8 @@ export const GasolinerasCrearPage = () => {
         setSnackState({ ...snackState, open: false });
     }
 
-    const codeAddress = () => {
-        geocoder.geocode( { 'address': address }, (results, status) => {
-
-            if (status == 'OK') {
-                setAddressList(results);
-                setGeolocation({ ko: false, status: '' });
-            } else {
-                setAddressList([]);
-                setGeolocation({ ko: true, status });
-            }
-        });
-    }
-
-    const selectAddress = ( addressId ) => {
-        
-        // Preparamos las variables
-        const addressItem = addressList[addressId];
-        let numero = '';
-        let direccion = '';
-        let localidad = '';
-        let cp = '';
-        let provincia = '';
-        let pais = '';
-
-        // Mapeamos los componentes de la dirección
-        addressItem.address_components.map( element => {
-            switch( element.types[0] ) {
-                case 'street_number':
-                    numero = element.long_name;
-                    break;
-                case 'route':
-                    direccion = element.long_name;
-                    break;
-                case 'locality':
-                    localidad = element.long_name;
-                    break;
-                case 'postal_code':
-                    cp = element.long_name;
-                    break;
-                case 'administrative_area_level_2':
-                    provincia = element.long_name;
-                    break;
-                case 'country':
-                    pais = element.long_name;
-                    break;
-            }
-        })
-
-        // Finalmente asignamos todos los valores al estado
-        setDirGasolinera( prev => ({ ...prev, numero, direccion, localidad, cp, provincia, pais, coordenadas: addressItem.geometry.location }));
-
-        // Ajustamos el mapa
-        map.setZoom(18);
-        map.setCenter(addressItem.geometry.location);
-        marker.setPosition(addressItem.geometry.location);
-        marker.setMap(map);
-
-    }
-
     return (
         <Grid container spacing={3}>
-
-            {/* Cuadro de búsqueda */}
-            <Grid item xs={12} md={12} lg={12}>
-                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                    <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                        Búsqueda de direcciones
-                    </Typography>
-                    <TextField
-                        id="address"
-                        label="Dirección"
-                        variant="filled"
-                        value={ address }
-                        onChange={ (e) => setAddress(e.target.value) }
-                        onKeyDown={ handleIntro }
-                    />
-                    {
-                        addressList.length > 0 && (
-                            <List sx={{ mt: 2 }} subheader={
-                                <ListSubheader component="div" id="nested-list-subheader">
-                                    Direcciones encontradas
-                                </ListSubheader>
-                            }>
-                            {
-                                addressList.map( (item, index) => (
-                                    <ListItemButton key={ index } onClick={ () => selectAddress(index) }>
-                                        <ListItemIcon>
-                                            <PlaceIcon />
-                                        </ListItemIcon>
-                                        <ListItemText primary={ item.formatted_address } secondary={ item.plus_code ? item.plus_code.global_code : '' } />
-                                    </ListItemButton>
-                                ))
-                            } 
-                            </List>
-                        )
-                    }
-                    {
-                        geoLocation.ko && (<Alert severity="error" sx={{ mt: 2 }}>La geolocalización no ha funcionado. Motivo: <b>{ geoLocation.status }</b></Alert>)
-                    }
-                    <Box sx={{ mt: 2 }}>
-                        <Button variant="contained" onClick={ codeAddress } endIcon={ <SearchIcon /> }>
-                            Buscar
-                        </Button>
-                    </Box>
-                </Paper>
-            </Grid>
 
             <Grid item xs={12} md={12} lg={12}>
                 <Grid container spacing={3}>
@@ -387,21 +243,6 @@ export const GasolinerasCrearPage = () => {
                                             />
                                         </Grid>
 
-                                        <Grid item xs={12} sm={6} md={12} lg={12}>
-                                            <TextField
-                                                required
-                                                error={ formErrors.coordenadas }
-                                                helperText={ formErrors.coordenadas ? "Campo obligatorio. Busca una dirección para asignar coordenadas" : "" }
-                                                disabled
-                                                id="coords"
-                                                label="Coordenadas"
-                                                variant="filled"
-                                                value={ dirGasolinera.coordenadas }
-                                                onChange={ (e) => setDirGasolinera(prev => ({ ...prev, coordenadas: e.target.value })) }
-                                                sx={{ width: '100%' }}
-                                            />
-                                        </Grid>
-
                                         <Grid item xs={12}>
                                             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: '8px', sm: '0' }, justifyContent: 'space-between' }}>
                                                 <Button variant="contained" onClick={ handleAtras } startIcon={ <ArrowBackIosIcon /> }>
@@ -420,16 +261,6 @@ export const GasolinerasCrearPage = () => {
                             </Grid>
 
                         </Grid>
-                    </Grid>
-
-                    {/* Mapa */}
-                    <Grid item xs={12} md={6} lg={6}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                                Mapa de la gasolinera
-                            </Typography>
-                            <div id="map" ref={ mapRef }></div>
-                        </Paper>
                     </Grid>
 
                 </Grid>

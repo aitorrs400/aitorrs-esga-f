@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Card, CardActions, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, FormHelperText, Grid, InputAdornment, InputLabel, MenuItem, Paper, Select, Slide, Snackbar, TextField, Typography } from "@mui/material";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom"
 import { mensajesBack } from "../helpers/mensajesBack";
 import { axiosFileInstance, axiosInstance } from "../helpers/axios";
@@ -16,9 +16,6 @@ import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import moment from 'moment';
 import 'moment/locale/es'; // Importa el idioma español
 
-// Librerías de Google Maps API
-const { Map } = await google.maps.importLibrary("maps");
-const { Marker } = await google.maps.importLibrary("marker");
 
 // Configuramos MomentJS
 moment.locale('es');
@@ -28,17 +25,14 @@ export const RecibosVerEditarPage = ({ edicion }) => {
     // Obtenemos el ID del recibo a ver
     const navigate = useNavigate();
     const { id } = useParams();
-    let mapRef = useRef(null);
 
     // Iniciamos estados
     const [recibo, setRecibo] = useState({ codigo: '', precioE: '', litros: '', precioEL:'', carburante: -1, fecha: moment(), gasolinera: '', vehiculo: '', fotoURL: '', fotoID: '' });
-    const [gasolinera, setGasolinera] = useState({ nombre: '', direccion: '', numero: '', localidad: '', cp: '', provincia: '', pais: '', coordenadas: { lat: '0.0000000', lng: '0.0000000' } });
+    const [gasolinera, setGasolinera] = useState({ nombre: '', direccion: '', numero: '', localidad: '', cp: '', provincia: '', pais: '' });
     const [vehiculo, setVehiculo] = useState({ nombre: '', marca: '', modelo: '', ano: '', matricula: '', foto: '' });
     const [gasolinerasList, setGasolinerasList] = useState([]);
     const [vehiculosList, setVehiculosList] = useState([]);
     const [file, setFile] = useState(null);
-    const [map, setMap] = useState();
-    const [marker, setMarker] = useState();
     const [modalEliminar, setModalEliminar] = useState({ abierto: false, id: '' });
     const [isFileUploading, setIsFileUploading] = useState(false);
     const [formErrors, setFormErrors] = useState({ codigo: false, precioE: false, precioEnum: false, litros: false, litrosNum: false, precioEL: false, precioELnum: false, carburante: false, fecha: false, gasolinera: false, vehiculo: false });
@@ -49,22 +43,6 @@ export const RecibosVerEditarPage = ({ edicion }) => {
         peticionesApi();
     },[]);
 
-    // Crear el mapa
-    useEffect(() => {
-        if( mapRef.current !== null ) {
-
-            // Creamos el mapa
-            setMap(new Map(document.getElementById("map"), {
-                zoom: 0,
-                center: { lat: 0.0, lng: 0.0 },
-                mapId: "DEMO_MAP_ID",
-            }));
-
-            // Creamos el marcador
-            setMarker(new Marker({ position: { lat: 0.0, lng: 0.0 }, title: gasolinera.nombre }));
-
-        }
-    },[mapRef]);
 
     // Cargar la gasolinera si cambia
     useEffect(() => {
@@ -75,7 +53,7 @@ export const RecibosVerEditarPage = ({ edicion }) => {
             if( gasolineraFiltrada !== undefined ) {
                 setGasolinera(gasolinerasList.filter( v => v.id === recibo.gasolinera )[0]);
             } else {
-                setGasolinera({ nombre: '', direccion: '', numero: '', localidad: '', cp: '', provincia: '', pais: '', coordenadas: { lat: '0.0000000', lng: '0.0000000' } });
+                setGasolinera({ nombre: '', direccion: '', numero: '', localidad: '', cp: '', provincia: '', pais: '' });
             }
         }
 
@@ -96,18 +74,6 @@ export const RecibosVerEditarPage = ({ edicion }) => {
 
     },[vehiculosList, recibo.vehiculo]);
 
-    // Actualizar el mapa
-    useEffect(() => {
-        if( map !== undefined && marker !== undefined ) {
-
-            // Ajustamos el mapa
-            map.setZoom(18);
-            map.setCenter(gasolinera.coordenadas);
-            marker.setPosition(gasolinera.coordenadas);
-            marker.setMap(map);
-
-        }
-    },[gasolinera.coordenadas]);
 
     // Funciones
     const peticionesApi = async () => {
@@ -649,16 +615,6 @@ export const RecibosVerEditarPage = ({ edicion }) => {
                                     />
                                 </Grid>
                             </Grid>
-                            <Grid item xs={12} md={12} lg={12}>
-                                <TextField
-                                    disabled
-                                    id="coordsGasolinera"
-                                    label="Coordenadas"
-                                    variant="filled"
-                                    value={ '('+gasolinera.coordenadas.lat+', '+gasolinera.coordenadas.lng+')' }
-                                    sx={{ width: '100%' }}
-                                />
-                            </Grid>
                         </Paper>
                     </Grid>
 
@@ -811,19 +767,9 @@ export const RecibosVerEditarPage = ({ edicion }) => {
                 </Paper>
             </Grid>
 
-            {/* Imagen del vehículo y mapa */}
+            {/* Imagen del vehículo */}
             <Grid item xs={ 12 } md={ 12 } lg={ 12 }>
                 <Grid container spacing={3}>
-
-                    {/* Mapa de la gasolinera */}
-                    <Grid item xs={ 12 } md={ 6 } lg={ 6 }>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                                Mapa de la gasolinera
-                            </Typography>
-                            <div id="map" ref={ mapRef }></div>
-                        </Paper>
-                    </Grid>
 
                     {/* Imagen del vehículo */}
                     <Grid item xs={ 12 } md={ 6 } lg={ 6 }>

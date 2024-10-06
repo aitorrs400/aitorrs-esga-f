@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Box, Button, Grid, Paper, Slide, Snackbar, TextField, Typography } from "@mui/material";
 
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
@@ -7,9 +7,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { axiosInstance } from "../helpers/axios";
 import { mensajesBack } from "../helpers/mensajesBack";
 
-// Librerías de Google Maps API
-const { Map } = await google.maps.importLibrary("maps");
-const { Marker } = await google.maps.importLibrary("marker");
 
 export const GasolinerasVerEditarPage = ({ edicion }) => {
 
@@ -18,12 +15,9 @@ export const GasolinerasVerEditarPage = ({ edicion }) => {
 
     // Inicializamos variables
     const navigate = useNavigate();
-    let mapRef = useRef(null);
 
-    const [map, setMap] = useState();
-    const [marker, setMarker] = useState();
-    const [formErrors, setFormErrors] = useState({ nombre: false, direccion: false, numero: false, localidad: false, cp: false, provincia: false, pais: false, coordenadas: false });
-    const [dirGasolinera, setDirGasolinera] = useState({ nombre: '', direccion: '', numero: '', localidad: '', cp: '', provincia: '', pais: '', coordenadas: '' });
+    const [formErrors, setFormErrors] = useState({ nombre: false, direccion: false, numero: false, localidad: false, cp: false, provincia: false, pais: false });
+    const [dirGasolinera, setDirGasolinera] = useState({ nombre: '', direccion: '', numero: '', localidad: '', cp: '', provincia: '', pais: '' });
     const [snackState, setSnackState] = useState({ open: false, Transition: Slide, text: 'Snackbar sin asignar', severity: 'info' });
 
     // Efectos
@@ -31,40 +25,11 @@ export const GasolinerasVerEditarPage = ({ edicion }) => {
         peticionesApi();
     },[]);
 
-    // Crear el mapa
-    useEffect(() => {
-        if( mapRef.current !== null ) {
-
-            // Creamos el mapa
-            setMap(new Map(document.getElementById("map"), {
-                zoom: 0,
-                center: { lat: 0.0, lng: 0.0 },
-                mapId: "DEMO_MAP_ID",
-            }));
-
-            // Creamos el marcador
-            setMarker(new Marker({ position: { lat: 0.0, lng: 0.0 }, title: dirGasolinera.nombre }));
-
-        }
-    },[mapRef]);
-
-    // Actualizar el mapa
-    useEffect(() => {
-        if( map !== undefined && marker !== undefined ) {
-
-            // Ajustamos el mapa
-            map.setZoom(18);
-            map.setCenter(dirGasolinera.coordenadas);
-            marker.setPosition(dirGasolinera.coordenadas);
-            marker.setMap(map);
-
-        }
-    },[dirGasolinera.coordenadas]);
-
+    // Funciones
     const handleSave = async (e) => {
 
         let errors = false;
-        let errorsForm = { direccion: false, numero: false, localidad: false, cp: false, provincia: false, pais: false, nombre: false, coordenadas: false };
+        let errorsForm = { direccion: false, numero: false, localidad: false, cp: false, provincia: false, pais: false, nombre: false };
 
         // Validamos todos los campos primero
         if( dirGasolinera.direccion === '' ) {
@@ -99,11 +64,6 @@ export const GasolinerasVerEditarPage = ({ edicion }) => {
 
         if( dirGasolinera.nombre === '' ) {
             errorsForm.nombre = true;
-            errors = true;
-        }
-
-        if( dirGasolinera.coordenadas === '' ) {
-            errorsForm.coordenadas = true;
             errors = true;
         }
 
@@ -313,20 +273,6 @@ export const GasolinerasVerEditarPage = ({ edicion }) => {
                                         </Grid>
                                     </Grid>
 
-                                    <Grid item xs={12} md={12} lg={12}>
-                                        <TextField
-                                            required
-                                            error={ formErrors.coordenadas }
-                                            helperText={ formErrors.coordenadas ? "Campo obligatorio. Busca una dirección para asignar coordenadas" : "" }
-                                            disabled
-                                            id="coords"
-                                            label="Coordenadas"
-                                            variant="filled"
-                                            value={ '('+dirGasolinera.coordenadas.lat+', '+dirGasolinera.coordenadas.lng+')' }
-                                            sx={{ width: '100%' }}
-                                        />
-                                    </Grid>
-
                                     <Box sx={{ mt: 2, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: '8px', sm: '0' }, justifyContent: 'space-between' }}>
                                         <Button variant="contained" onClick={ handleAtras } startIcon={ <ArrowBackIosIcon /> }>
                                             Atrás
@@ -344,16 +290,6 @@ export const GasolinerasVerEditarPage = ({ edicion }) => {
                             </Grid>
 
                         </Grid>
-                    </Grid>
-
-                    {/* Mapa */}
-                    <Grid item xs={12} md={6} lg={6}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                                Mapa de la gasolinera
-                            </Typography>
-                            <div id="map" ref={ mapRef }></div>
-                        </Paper>
                     </Grid>
 
                 </Grid>
