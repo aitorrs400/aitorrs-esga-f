@@ -42,7 +42,8 @@ export const LinearChart = ({ label, vertical, horizontal, min, max }) => {
             {
                 label: label,
                 data: vertical,
-                backgroundColor: '#9E9E9E'
+                backgroundColor: '#9E9E9E',
+                tension: 0.3
             }
         ]
     };
